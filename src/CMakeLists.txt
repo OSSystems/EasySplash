@@ -26,7 +26,7 @@ add_executable(
 
 add_executable(
   easysplashctl
-  splashctl.cpp)
+  easysplashctl.cpp)
 
 target_link_libraries(easysplash ${HAVE_LIBEVENT} ${HAVE_PTHREAD} ${HAVE_ZIP} ${HAVE_PNG})
 target_link_libraries(easysplashctl ${HAVE_LIBEVENT})
