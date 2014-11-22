@@ -22,14 +22,14 @@
 #ifndef _ANIMATION_HPP
 #define _ANIMATION_HPP
 
-class Framebuffer;
+class Backend;
 class EventLoop;
 class AnimationPrivate;
 
 class Animation
 {
 public:
-    Animation(Framebuffer *fb, EventLoop *loop);
+    Animation(Backend *backend, EventLoop *loop);
 
     void start();
     void exec();

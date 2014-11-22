@@ -52,7 +52,7 @@ class Part;
 class Frame
 {
 public:
-    Framebuffer *fb;
+    Backend *backend;
     zip_int64_t index;
     char *data = NULL;
     int depth;
@@ -104,7 +104,7 @@ public:
                 png_read_rows(png_ptr, &row, NULL, 1);
 
                 for (int j = 0; j < png_get_image_width(png_ptr, info_ptr); j++) {
-                    int location = (j * (32 / depth)) +  (i * (fb->width() * 4));
+                    int location = (j * (32 / depth)) +  (i * (backend->width() * 4));
 
                     *(buffer + location + 2) = row[j * bytes + 0];
                     *(buffer + location + 1) = row[j * bytes + 1];
@@ -131,7 +131,7 @@ public:
 class AnimationPrivate
 {
 public:
-    Framebuffer *fb;
+    Backend *backend;
     EventLoop *loop;
     struct zip *zip;
     int fps;
@@ -147,10 +147,10 @@ public:
     }
 };
 
-Animation::Animation(Framebuffer *fb, EventLoop *loop)
+Animation::Animation(Backend *backend, EventLoop *loop)
 {
     d = new AnimationPrivate;
-    d->fb = fb;
+    d->backend = backend;
     d->loop = loop;
 
     if (access("/lib/splash/oem/bootanimation.zip", F_OK) != -1)
@@ -225,11 +225,10 @@ void Animation::exec()
 
                 time(&now);
 
-                int offsetX = ((d->fb->width() - d->width) / 2) * 4;
-                int offsetY = ((d->fb->height() - d->height) / 2) * (d->fb->width() * 4);
+                int offsetX = ((d->backend->width() - d->width) / 2) * 4;
+                int offsetY = ((d->backend->height() - d->height) / 2) * (d->backend->width() * 4);
 
-                // draw
-                memcpy(d->fb->data() + offsetX + offsetY, frame->data, d->width * d->height * frame->depth);
+                d->backend->drawFrame(frame->data, offsetX, offsetY, d->width * d->height * frame->depth);
 
                 time(&past);
 
@@ -336,7 +335,7 @@ bool Animation::readFrames()
             }
 
             frame = new Frame;
-            frame->fb = d->fb;
+            frame->backend = d->backend;
             frame->index = zip_entries[zip_index]->index;
             frame->part = part;
             part->frames.push_back(frame);

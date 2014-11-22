@@ -22,17 +22,21 @@
 #ifndef _FRAMEBUFFER_HPP
 #define _FRAMEBUFFER_HPP
 
+#include "backend.hpp"
+
 #include <string>
 
 using std::string;
 
-class Framebuffer
+class Framebuffer: public Backend
 {
 public:
     Framebuffer(const string &device = string("/dev/fb0"));
     ~Framebuffer();
 
     bool initialize();
+
+    void drawFrame(char *data, int offsetX, int offsetY, int len);
 
     inline const string &device() { return _device; }
     inline int width() { return _width; }

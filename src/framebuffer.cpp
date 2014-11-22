@@ -23,15 +23,24 @@
 
 #include <iostream>
 
+#include <stdio.h>
 #include <linux/fb.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <string.h>
 
 Framebuffer::Framebuffer(const string &device)
 {
     _device = device;
+}
+
+Framebuffer::~Framebuffer()
+{
+    if (_oldCursorState) {
+        enableCursor();
+    }
 }
 
 bool Framebuffer::initialize()
@@ -87,11 +96,9 @@ bool Framebuffer::initialize()
     return true;
 }
 
-Framebuffer::~Framebuffer()
+void Framebuffer::drawFrame(char *data, int offsetX, int offsetY, int len)
 {
-    if (_oldCursorState) {
-        enableCursor();
-    }
+    memcpy(_data + offsetX + offsetY, data, len);
 }
 
 bool Framebuffer::isCursorEnabled()
