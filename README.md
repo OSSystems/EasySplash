@@ -138,6 +138,7 @@ Then, run from EasySplash's root directory:
 
 * `DISPLAY_TYPE_SWRENDER`: Software rendering to the Linux framebuffer using the
   [Pixman library](http://www.pixman.org/) for blitting frames to screen
+* `DISPLAY_TYPE_G2D`: Hardware accelerated rendering using the G2D API (i.MX specific)
 
 Finally, once the build is finished, install using
 
