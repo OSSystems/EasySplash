@@ -18,38 +18,49 @@
 # along with EasySplash.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-find_library(HAVE_LIBEVENT NAMES event)
-find_library(HAVE_PTHREAD NAMES pthread)
-find_library(HAVE_ZIP NAMES zip)
-find_library(HAVE_PNG NAMES png)
+find_package(PkgConfig)
 
-if(NOT HAVE_LIBEVENT)
-  message(FATAL_ERROR "libevent not found")
+pkg_check_modules(ZLIB zlib)
+pkg_check_modules(LIBPNG libpng)
+
+add_definitions(-Wextra -Wall -Wno-variadic-macros -std=c++11 -pedantic)
+
+if (NOT CTL_FIFO_PATH)
+  set(CTL_FIFO_PATH "/tmp/easysplash-ctl")
 endif()
 
-if(NOT HAVE_PTHREAD)
-  message(FATAL_ERROR "pthread not found")
+if (DISPLAY_TYPE_SWRENDER)
+  pkg_check_modules(PIXMAN pixman-1)
+  set(DISPLAY_CODE swrender/swrender_display.cpp)
+  set(DISPLAY_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/swrender" "${PIXMAN_INCLUDE_DIRS}")
+  set(DISPLAY_LIBRARIES "${PIXMAN_LIBRARIES}")
+else()
+  message(FATAL_ERROR "Display type not set. Set one in the command line arguments. Example: -DDISPLAY_TYPE_SWRENDER=1")
 endif()
 
-if(NOT HAVE_ZIP)
-  message(FATAL_ERROR "zip not found")
-endif()
+include_directories(${LIBPNG_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${DISPLAY_INCLUDE_DIRS})
 
-add_definitions(-std=gnu++11)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 add_executable(
   easysplash
-  main.cpp
   animation.cpp
-  eventloop.cpp
-  framebuffer.cpp)
+  event_loop.cpp
+  linux_framebuffer.cpp
+  load_png.cpp
+  log.cpp
+  main.cpp
+  types.cpp
+  zip_archive.cpp
+  ${DISPLAY_CODE}
+)
 
 add_executable(
   easysplashctl
-  easysplashctl.cpp)
+  easysplashctl.cpp
+)
 
-target_link_libraries(easysplash ${HAVE_LIBEVENT} ${HAVE_PTHREAD} ${HAVE_ZIP} ${HAVE_PNG})
-target_link_libraries(easysplashctl ${HAVE_LIBEVENT})
+target_link_libraries(easysplash ${LIBPNG_LIBRARIES} ${ZLIB_LIBRARIES} ${DISPLAY_LIBRARIES})
 
 install(TARGETS easysplash DESTINATION bin)
 install(TARGETS easysplashctl DESTINATION bin)

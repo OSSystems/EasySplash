@@ -1,62 +1,56 @@
 /*
- * EasySplash - Linux Bootsplash
+ * EasySplash - tool for animated splash screens
  * Copyright (C) 2014  O.S. Systems Software LTDA.
  *
- * This file is part of EasySplash.
- *
- * EasySplash is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * EasySplash is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with EasySplash.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * Please refer to the LICENSE file included in the source code for
+ * licensing terms.
  */
 
-#include <iostream>
-#include <sstream>
+
+#include <config.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <cstdint>
+#include <cerrno>
+#include <cstring>
 #include <string>
+#include <iostream>
 
-#include <sys/socket.h>
-#include <sys/un.h>
-
-#define UNIX_SOCK_PATH "/tmp/easysplash"
 
 int main(int argc, char *argv[])
 {
-    int fd;
-    int len;
-    long progress;
-    struct sockaddr_un addr;
+	// Get progress percentage from arguments
 
-    progress = strtol(argv[1], NULL, 10);
-    if (errno == EINVAL || errno == ERANGE || progress < 0 || progress > 100) {
-        std::cout << "Invalid progress value" << std::endl;
-        return 1;
-    }
+	if (argc < 2)
+	{
+		std::cerr << "Usage: " << argv[0] << " [PROGRESS (0-100)]\n";
+		return -1;
+	}
 
-    memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, UNIX_SOCK_PATH);
+	int progress_int = std::stoi(argv[1]);
+	if ((progress_int < 0) || (progress_int > 100))
+	{
+		std::cerr << "Progress value " << progress_int << " is outside of the bounds 0-100\n";
+		return -1;
+	}
 
-    fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
-    if (connect(fd, (struct sockaddr *)&addr, len) == -1) {
-        std::cout << "Could not connect to splash socket" << std::endl;
-        return 1;
-    }
+	// Send percentage (stored in one byte, which can hold the 0-100 range)
+	// over the FIFO to EasySplash
+	std::uint8_t progress = progress_int;
 
-    std::ostringstream ss;
-    ss << progress;
+	int fifo_fd = open(CTL_FIFO_PATH, O_RDWR | O_NONBLOCK);
+	if (fifo_fd == -1)
+	{
+		std::cerr << "Could not open EasySplash FIFO \"" << CTL_FIFO_PATH << "\": " << std::strerror(errno) << "\n";
+		return -1;
+	}
 
-    send(fd, ss.str().c_str(), ss.str().length(), 0);
+	int ret = write(fifo_fd, &progress, sizeof(progress));
+	if (ret == -1)
+		std::cerr << "Could not send progress to EasySplash: " << std::strerror(errno) << "\n";
 
-    return 0;
+	close(fifo_fd);
+
+	return (ret == -1) ? -1 : 0;
 }
