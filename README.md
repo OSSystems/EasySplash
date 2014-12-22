@@ -130,7 +130,6 @@ Then, run from EasySplash's root directory:
     mkdir build
     cd build
     cmake .. -D[display-type]=1
-    make
 
 (The aforementioned environment variables are only necessary for this configure call.)
 
@@ -139,8 +138,22 @@ Then, run from EasySplash's root directory:
 * `DISPLAY_TYPE_SWRENDER`: Software rendering to the Linux framebuffer using the
   [Pixman library](http://www.pixman.org/) for blitting frames to screen
 * `DISPLAY_TYPE_G2D`: Hardware accelerated rendering using the G2D API (i.MX specific)
+* `DISPLAY_TYPE_GLES`: Hardware accelerated rendering using the OpenGL ES API
 
-Finally, once the build is finished, install using
+In the `DISPLAY_TYPE_GLES` case, an additional argument is necessary, `-D[egl-platform]=1`:
+
+* `EGL_PLATFORM_X11`: Create an EGL surface in an X11 window (useful for debugging animations; also works on the PC)
+* `EGL_PLATFORM_VIV_FB`: Create an EGL surface directly on the framebuffer (Vivante GPU specific)
+
+Example cmake call with an OpenGL ES display on the Framebuffer:
+
+    cmake .. -DDISPLAY_TYPE_GLES=1 -DEGL_PLATFORM_VIV_FB=1
+
+Now that the build is configured, simply run:
+
+    make
+
+Once the build is finished, install using
 
     make install
 

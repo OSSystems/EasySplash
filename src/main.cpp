@@ -20,6 +20,8 @@
 #include "swrender/swrender_display.hpp"
 #elif defined(DISPLAY_TYPE_G2D)
 #include "g2d/g2d_display.hpp"
+#elif defined(DISPLAY_TYPE_GLES)
+#include "eglgles/gles_display.hpp"
 #else
 #error Unknown display type selected
 #endif
@@ -115,6 +117,8 @@ int main(int argc, char *argv[])
 	swrender_display display;
 #elif defined(DISPLAY_TYPE_G2D)
 	g2d_display display;
+#elif defined(DISPLAY_TYPE_GLES)
+	gles_display display;
 #endif
 
 	if (!display.is_valid())

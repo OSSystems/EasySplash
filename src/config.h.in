@@ -1,3 +1,4 @@
 #cmakedefine CTL_FIFO_PATH "@CTL_FIFO_PATH@"
 #cmakedefine DISPLAY_TYPE_SWRENDER
 #cmakedefine DISPLAY_TYPE_G2D
+#cmakedefine DISPLAY_TYPE_GLES
