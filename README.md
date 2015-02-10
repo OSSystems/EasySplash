@@ -15,7 +15,8 @@ in realtime, without user interaction. In non-realtime mode, the animation progr
 sending progress updates over easysplashctl. The latter is useful if a progress value can be
 determined while something is loading, for example.
 
-EasySplash is put under the GNU General Public License version 2.
+Please refer to the LICENSE file included in the source code for
+licensing terms.
 
 
 Requirements
