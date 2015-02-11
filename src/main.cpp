@@ -12,6 +12,8 @@
 #include <iostream>
 #include <queue>
 #include <fstream>
+#include <cstring>
+#include <unistd.h>
 #include "event_loop.hpp"
 #include "animation.hpp"
 #include "zip_archive.hpp"
@@ -27,6 +29,7 @@
 #error Unknown display type selected
 #endif
 
+#define REAL_INIT "/sbin/init"
 
 namespace
 {
@@ -106,6 +109,16 @@ int main(int argc, char *argv[])
 	else if (loglevel == "error")
 		set_min_log_level(log_level_error);
 
+	if (fork()) {
+		char *argv0 = argv[0];
+		/* first, change our argv[0], then exec */
+		argv[0] = basename((char *)REAL_INIT);
+		execv(REAL_INIT, argv);
+
+		argv[0] = argv0;
+		LOG_MSG(error, "failed to exec " << REAL_INIT);
+		exit(1);
+	}
 
 #if defined(DISPLAY_TYPE_SWRENDER)
 	swrender_display display;
