@@ -10,6 +10,7 @@
 #include <config.h>
 #include <getopt.h>
 #include <iostream>
+#include <queue>
 #include <fstream>
 #include "event_loop.hpp"
 #include "animation.hpp"
@@ -106,13 +107,6 @@ int main(int argc, char *argv[])
 		set_min_log_level(log_level_error);
 
 
-	std::ifstream in_zip_stream(zipfilename.c_str(), std::ios::binary);
-	if (!in_zip_stream)
-	{
-		LOG_MSG(error, "could not load zip archive " << zipfilename);
-		return -1;
-	}
-
 #if defined(DISPLAY_TYPE_SWRENDER)
 	swrender_display display;
 #elif defined(DISPLAY_TYPE_G2D)
@@ -124,6 +118,35 @@ int main(int argc, char *argv[])
 	if (!display.is_valid())
 	{
 		LOG_MSG(error, "initializing display failed");
+		return -1;
+	}
+
+	if (zipfilename.empty())
+	{
+		std::queue<std::string> zip_queue;
+
+		zip_queue.push(std::string("/lib/easysplash/oem/") + std::to_string(display.get_width()) + ".zip");
+		zip_queue.push("/lib/easysplash/oem/default.zip");
+		zip_queue.push(std::string("/lib/easysplash/") + std::to_string(display.get_width()) + ".zip");
+		zip_queue.push("/lib/easysplash/default.zip");
+
+		while (!zip_queue.empty())
+		{
+			zipfilename = zip_queue.front();
+
+			std::ifstream f(zipfilename.c_str());
+			if (f.good()) {
+				break;
+			}
+
+			zip_queue.pop();
+		}
+	}
+
+	std::ifstream in_zip_stream(zipfilename.c_str(), std::ios::binary);
+	if (!in_zip_stream)
+	{
+		LOG_MSG(error, "could not load zip archive " << zipfilename);
 		return -1;
 	}
 
