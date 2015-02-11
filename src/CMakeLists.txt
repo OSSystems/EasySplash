@@ -1,6 +1,6 @@
 #
 # EasySplash - Linux Bootsplash
-# Copyright (C) 2014  O.S. Systems Software LTDA.
+# Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
 #
 # This file is part of EasySplash.
 #
@@ -90,5 +90,5 @@ add_executable(
 
 target_link_libraries(easysplash ${LIBPNG_LIBRARIES} ${ZLIB_LIBRARIES} ${DISPLAY_LIBRARIES})
 
-install(TARGETS easysplash DESTINATION bin)
-install(TARGETS easysplashctl DESTINATION bin)
+install(TARGETS easysplash DESTINATION sbin)
+install(TARGETS easysplashctl DESTINATION sbin)
