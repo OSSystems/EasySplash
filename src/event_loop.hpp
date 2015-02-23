@@ -26,14 +26,13 @@ namespace easysplash
 class event_loop
 {
 public:
-	event_loop(display &p_display, animation const &p_animation, bool const p_non_realtime_mode);
+	event_loop(display &p_display, bool const p_non_realtime_mode);
 	~event_loop();
 
-	void run();
+	void run(animation const &p_animation);
 
 private:
 	display &m_display;
-	animation const &m_animation;
 	int m_fifo_fd, m_sigint_fds[2];
 	bool m_non_realtime_mode;
 };

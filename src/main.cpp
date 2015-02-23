@@ -167,6 +167,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	event_loop evloop(display, non_realtime);
+
 	LOG_MSG(info, "loading animation from zip archive " << zipfilename);
 	zip_archive zip(in_zip_stream);
 	animation anim = load_animation(zip, display);
@@ -176,8 +178,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	event_loop evloop(display, anim, non_realtime);
-	evloop.run();
+	evloop.run(anim);
 
 	return 0;
 }
