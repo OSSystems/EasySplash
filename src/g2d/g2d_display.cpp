@@ -218,7 +218,7 @@ bool g2d_display::create_g2d_fb_image()
 	linux_framebuffer::format const & fbfmt = m_fbdev.get_format();
 
 	if ((fbfmt.m_num_rgba_bits[0] == 5) && (fbfmt.m_num_rgba_bits[1] == 6) && (fbfmt.m_num_rgba_bits[2] == 5))
-		m_g2d_fb_surface.format = G2D_RGB565;
+		m_g2d_fb_surface.format = G2D_BGR565;
 	else if ((fbfmt.m_num_rgba_bits[0] == 8) && (fbfmt.m_num_rgba_bits[1] == 8) && (fbfmt.m_num_rgba_bits[2] == 8) && (fbfmt.m_channel_order == linux_framebuffer::channel_order_argb))
 	{
 		if (fbfmt.m_num_rgba_bits[3] == 8)
