@@ -34,6 +34,16 @@ egl_platform::egl_platform()
 
 	// Initialize display
 
+	// Force the driver to configure the framebuffer for double buffering and vsync
+	// unless the EASYSPLASH_NO_FB_MULTI_BUFFER environment variable is set
+	if (getenv("EASYSPLASH_NO_FB_MULTI_BUFFER") == nullptr)
+	{
+		LOG_MSG(info, "Enabling double buffering and vsync");
+		static std::string envvar("FB_MULTI_BUFFER=2");
+		putenv(&(envvar[0]));
+	}
+
+	// Initialize the EGL display
 	{
 		EGLint ver_major, ver_minor;
 

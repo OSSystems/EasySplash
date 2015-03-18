@@ -172,6 +172,11 @@ This is the help screen of EasySplash when ran with the -h argument:
 
 Valid log levels are: trace, debug, info, warning, error. Log output goes to stderr.
 
+If EasySplash was built with the `DISPLAY_TYPE_GLES` display type and the `EGL_PLATFORM_VIV_FB`
+EGL platform, it will automatically enable double buffering and vsync to prevent tearing
+artifacts. If this is not desired, start EasySplash with the `EASYSPLASH_NO_FB_MULTI_BUFFER`
+environment variable set (the value is unimportant).
+
 easysplashctl expects EasySplash to be already running, otherwise it exits with
 an error. Its only argument is the progress indicator, which is a number in the 0-100
 range. For example, to transmit the progress value 55 to EasySplash, run:
