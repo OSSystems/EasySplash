@@ -227,6 +227,7 @@ egl_platform::~egl_platform()
 {
 	if (m_egl_display != EGL_NO_DISPLAY)
 	{
+		LOG_MSG(debug, "Shutting down X11 EGL display");
 		eglMakeCurrent(m_egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 		eglTerminate(m_egl_display);
 	}

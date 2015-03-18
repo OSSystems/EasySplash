@@ -33,7 +33,10 @@ swrender_display::sw_image::sw_image(sw_image && p_other)
 swrender_display::sw_image::~sw_image()
 {
 	if (m_pixman_image != NULL)
+	{
+		LOG_MSG(debug, "Shutting down Pixman display");
 		pixman_image_unref(m_pixman_image);
+	}
 }
 
 

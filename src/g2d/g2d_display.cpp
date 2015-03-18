@@ -37,7 +37,10 @@ g2d_display::g2d_image::g2d_image(g2d_image && p_other)
 g2d_display::g2d_image::~g2d_image()
 {
 	if (m_g2d_buffer != nullptr)
+	{
+		LOG_MSG(debug, "Shutting down G2D image");
 		g2d_free(m_g2d_buffer);
+	}
 }
 
 
