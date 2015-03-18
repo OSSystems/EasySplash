@@ -1,4 +1,5 @@
 #cmakedefine CTL_FIFO_PATH "@CTL_FIFO_PATH@"
+#cmakedefine EASYSPLASH_PID_FILE "@EASYSPLASH_PID_FILE@"
 #cmakedefine DISPLAY_TYPE_SWRENDER
 #cmakedefine DISPLAY_TYPE_G2D
 #cmakedefine DISPLAY_TYPE_GLES

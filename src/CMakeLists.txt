@@ -19,6 +19,10 @@ if (NOT CTL_FIFO_PATH)
   set(CTL_FIFO_PATH "/tmp/easysplash-ctl")
 endif()
 
+if (NOT EASYSPLASH_PID_FILE)
+  set(EASYSPLASH_PID_FILE "/tmp/easysplash.pid")
+endif()
+
 if (DISPLAY_TYPE_SWRENDER)
 
   pkg_check_modules(PIXMAN pixman-1)

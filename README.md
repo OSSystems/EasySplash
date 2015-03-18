@@ -178,10 +178,17 @@ artifacts. If this is not desired, start EasySplash with the `EASYSPLASH_NO_FB_M
 environment variable set (the value is unimportant).
 
 easysplashctl expects EasySplash to be already running, otherwise it exits with
-an error. Its only argument is the progress indicator, which is a number in the 0-100
+an error. It requires one argument, the progress indicator, which is a number in the 0-100
 range. For example, to transmit the progress value 55 to EasySplash, run:
 
     easysplashctl 55
+
+An optional second argument is `--wait-until-finished`. It is only meaningful if the progress
+value is 100. It instructs easysplashctl to wait until the EasySplash process ends. This is
+useful to let other applications (which access the screen) wait until EasySplash has finished
+displaying the animation. Example:
+
+    easysplashctl 100 --wait-until-finished
 
 
 Implementation notes
