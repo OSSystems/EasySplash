@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 
 		LOG_MSG(info, "loading animation from zip archive " << zipfilename);
 		zip_archive zip(in_zip_stream);
-		animation anim = load_animation(zip, display);
+		animation anim(zip, display);
 		if (!is_valid(anim))
 		{
 			LOG_MSG(error, "could not load animation from zip archivei " << zipfilename);

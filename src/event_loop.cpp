@@ -114,7 +114,7 @@ event_loop::~event_loop()
 }
 
 
-void event_loop::run(animation const &p_animation)
+void event_loop::run(animation &p_animation)
 {
 	if (m_fifo_fd == -1)
 		return;
@@ -125,10 +125,10 @@ void event_loop::run(animation const &p_animation)
 	// Calculate coordinates based on the output width specified
 	// by the desc.txt file in the animation.
 	// The coordinates display the frames in the center of the screen.
-	long dx1 = (m_display.get_width() - p_animation.m_output_width) / 2;
-	long dy1 = (m_display.get_height() - p_animation.m_output_height) / 2;
-	long dx2 = dx1 + p_animation.m_output_width - 1;
-	long dy2 = dy1 + p_animation.m_output_height - 1;
+	long dx1 = (m_display.get_width() - p_animation.get_output_width()) / 2;
+	long dy1 = (m_display.get_height() - p_animation.get_output_height()) / 2;
+	long dx2 = dx1 + p_animation.get_output_width() - 1;
+	long dy2 = dy1 + p_animation.get_output_height() - 1;
 
 	// Setup pollfd structure to check for bytes to read from the FIFO fd
 	struct pollfd fds[2];
@@ -156,11 +156,11 @@ void event_loop::run(animation const &p_animation)
 	int wait_period = m_non_realtime_mode ? -1 : 0;
 
 	// Define period of one frame
-	std::chrono::steady_clock::duration const frame_dur = std::chrono::nanoseconds(1000000000) / p_animation.m_fps;
+	std::chrono::steady_clock::duration const frame_dur = std::chrono::nanoseconds(1000000000) / p_animation.get_fps();
 
 	// Frame drawing function
 	auto draw_frame = [&](){
-		display::image_handle cur_image_handle = get_image_handle_at(anim_pos, p_animation);
+		display::image_handle cur_image_handle = p_animation.get_image_handle_at(anim_pos);
 		if (cur_image_handle != display::invalid_image_handle)
 		{
 			m_display.draw_image(cur_image_handle, dx1, dy1, dx2, dy2);
@@ -181,7 +181,7 @@ void event_loop::run(animation const &p_animation)
 		// the animation could never be stopped, since the last part runs
 		// in an infinite loop. Also, in non-realtime mode, the
 		// m_play_until_complete flag makes no sense.
-		if (stop_loop_requested && (m_non_realtime_mode || (anim_pos.m_part_nr >= (p_animation.m_parts.size() - 1)) || !p_animation.m_parts[anim_pos.m_part_nr].m_play_until_complete))
+		if (stop_loop_requested && (m_non_realtime_mode || (anim_pos.m_part_nr >= (p_animation.get_num_parts() - 1)) || !p_animation.get_part(anim_pos.m_part_nr)->m_play_until_complete))
 			break;
 
 		int poll_ret = poll(fds, num_poll_fds, wait_period);
@@ -243,7 +243,7 @@ void event_loop::run(animation const &p_animation)
 				// to the percentage defined by "progress". Do so by calculating
 				// by how many frames the animation advances.
 
-				unsigned int abs_frame_pos = progress * (p_animation.m_total_num_frames - 1) / 100;
+				unsigned int abs_frame_pos = progress * (p_animation.get_total_num_frames() - 1) / 100;
 				if (abs_frame_pos > old_abs_frame_pos)
 				{
 					// Only handle forward advances (backwards

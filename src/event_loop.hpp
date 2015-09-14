@@ -29,7 +29,7 @@ public:
 	event_loop(display &p_display, bool const p_non_realtime_mode);
 	~event_loop();
 
-	void run(animation const &p_animation);
+	void run(animation &p_animation);
 
 private:
 	display &m_display;
