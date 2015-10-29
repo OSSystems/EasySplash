@@ -132,8 +132,7 @@ animation::part const * animation::get_part(std::size_t const p_index) const
 
 unsigned int animation::get_fps() const
 {
-	//return m_fps;
-	return 10;
+	return m_fps;
 }
 
 
