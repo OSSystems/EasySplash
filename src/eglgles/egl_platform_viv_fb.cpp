@@ -1,6 +1,6 @@
 /*
  * EasySplash - tool for animated splash screens
- * Copyright (C) 2014  O.S. Systems Software LTDA.
+ * Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
  *
  * Please refer to the LICENSE file included in the source code for
  * licensing terms.
@@ -40,6 +40,14 @@ egl_platform::egl_platform()
 	{
 		LOG_MSG(info, "Enabling double buffering and vsync");
 		static std::string envvar("FB_MULTI_BUFFER=2");
+		putenv(&(envvar[0]));
+	}
+
+	// Disable Vivante framebuffer clear
+	if (getenv("EASYSPLASH_NO_DISABLE_CLEAR") == nullptr)
+	{
+		LOG_MSG(info, "Disabling framebuffer clear");
+		static std::string envvar("GPU_VIV_DISABLE_CLEAR_FB=1");
 		putenv(&(envvar[0]));
 	}
 
