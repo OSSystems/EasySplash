@@ -1,6 +1,6 @@
 /*
  * EasySplash - tool for animated splash screens
- * Copyright (C) 2014  O.S. Systems Software LTDA.
+ * Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
  *
  * Please refer to the LICENSE file included in the source code for
  * licensing terms.
@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
 	bool wait_until_finished = false;
 	if ((argc >= 3) && (std::string(argv[2]) == "--wait-until-finished") && (progress_int == 100))
 	{
-		std::cerr << "100% reached, will wait until easysplash is finished\n";
 		wait_until_finished = true;
 	}
 
@@ -90,6 +89,7 @@ int main(int argc, char *argv[])
 	// Now wait for EasySplash to finish if necessary
 	if (wait_until_finished)
 	{
+		std::cerr << "100% reached, will wait until easysplash is finished\n";
 		while (true)
 		{
 			// The common way of watching PIDs of non-child processes is to
