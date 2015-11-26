@@ -1,6 +1,6 @@
 #
 # EasySplash - Linux Bootsplash
-# Copyright (C) 2014  O.S. Systems Software LTDA.
+# Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
 #
 # This file is part of EasySplash.
 #

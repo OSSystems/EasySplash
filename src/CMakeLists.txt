@@ -70,7 +70,35 @@ else()
   message(FATAL_ERROR "Display type not set. Set one in the command line arguments. Example: -DDISPLAY_TYPE_SWRENDER=1")
 endif()
 
-include_directories(${LIBPNG_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${DISPLAY_INCLUDE_DIRS})
+option(ENABLE_SYSVINIT_SUPPORT "Enable Sysvinit support" ON)
+if (ENABLE_SYSVINIT_SUPPORT)
+  set(WITH_SYSVINIT "ON")
+else()
+  set(WITH_SYSVINIT "OFF")
+endif()
+
+option(ENABLE_SYSTEMD_SUPPORT "Enable SystemD support" ON)
+
+if (ENABLE_SYSTEMD_SUPPORT)
+  pkg_check_modules(SYSTEMD "systemd" REQUIRED)
+  pkg_check_modules(LIBSYSTEMD "libsystemd" REQUIRED)
+  if (SYSTEMD_FOUND AND "${SYSTEMD_SYSTEM_UNIT_DIR}" STREQUAL "")
+	execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=systemdsystemunitdir systemd OUTPUT_VARIABLE SYSTEMD_SYSTEM_UNIT_DIR)
+	string(REGEX REPLACE "[ \t\n]+" "" SYSTEMD_SYSTEM_UNIT_DIR "${SYSTEMD_SYSTEM_UNIT_DIR}")
+  elseif (NOT SYSTEMD_FOUND AND SYSTEMD_SYSTEM_UNIT_DIR)
+	message (FATAL_ERROR "Variable SYSTEMD_SYSTEM_UNIT_DIR is defined, but we can't find systemd using pkg-config")
+  endif()
+
+  if (SYSTEMD_FOUND)
+	set(WITH_SYSTEMD "ON")
+	add_definitions(-DWITH_SYSTEMD)
+	message(STATUS "systemd services install dir: ${SYSTEMD_SYSTEM_UNIT_DIR}")
+  else()
+	set(WITH_SYSTEMD "OFF")
+  endif()
+endif()
+
+include_directories(${LIBPNG_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${LIBSYSTEMD_INCLUDE_DIRS} ${DISPLAY_INCLUDE_DIRS})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
@@ -92,7 +120,7 @@ add_executable(
   easysplashctl.cpp
 )
 
-target_link_libraries(easysplash ${LIBPNG_LIBRARIES} ${ZLIB_LIBRARIES} ${DISPLAY_LIBRARIES})
+target_link_libraries(easysplash ${LIBPNG_LIBRARIES} ${ZLIB_LIBRARIES} ${LIBSYSTEMD_LIBRARIES} ${DISPLAY_LIBRARIES})
 
 if (NOT CMAKE_INSTALL_SBINDIR)
   set(CMAKE_INSTALL_SBINDIR "sbin")
@@ -100,3 +128,5 @@ endif()
 
 install(TARGETS easysplash DESTINATION ${CMAKE_INSTALL_SBINDIR})
 install(TARGETS easysplashctl DESTINATION ${CMAKE_INSTALL_SBINDIR})
+
+add_subdirectory(init)

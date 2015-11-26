@@ -1,6 +1,6 @@
 /*
  * EasySplash - tool for animated splash screens
- * Copyright (C) 2014  O.S. Systems Software LTDA.
+ * Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
  *
  * Please refer to the LICENSE file included in the source code for
  * licensing terms.
@@ -19,6 +19,10 @@
 #include "animation.hpp"
 #include "zip_archive.hpp"
 #include "log.hpp"
+
+#if defined(WITH_SYSTEMD)
+#include <systemd/sd-daemon.h>
+#endif
 
 #if defined(DISPLAY_TYPE_SWRENDER)
 #include "swrender/swrender_display.hpp"
@@ -191,6 +195,10 @@ int main(int argc, char *argv[])
 		}
 
 		event_loop evloop(display, non_realtime);
+
+#if defined(WITH_SYSTEMD)
+		sd_notify(0, "READY=1");
+#endif
 
 		LOG_MSG(info, "loading animation from zip archive " << zipfilename);
 		zip_archive zip(in_zip_stream);
