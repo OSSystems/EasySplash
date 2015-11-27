@@ -94,5 +94,9 @@ add_executable(
 
 target_link_libraries(easysplash ${LIBPNG_LIBRARIES} ${ZLIB_LIBRARIES} ${DISPLAY_LIBRARIES})
 
-install(TARGETS easysplash DESTINATION sbin)
-install(TARGETS easysplashctl DESTINATION sbin)
+if (NOT CMAKE_INSTALL_SBINDIR)
+  set(CMAKE_INSTALL_SBINDIR "sbin")
+endif()
+
+install(TARGETS easysplash DESTINATION ${CMAKE_INSTALL_SBINDIR})
+install(TARGETS easysplashctl DESTINATION ${CMAKE_INSTALL_SBINDIR})
