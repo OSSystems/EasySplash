@@ -170,9 +170,9 @@ int main(int argc, char *argv[])
 			std::queue<std::string> zip_queue;
 
 			zip_queue.push(std::string("/lib/easysplash/oem/") + std::to_string(display.get_width()) + ".zip");
-			zip_queue.push("/lib/easysplash/oem/default.zip");
+			zip_queue.push("/lib/easysplash/oem/bootanimation.zip");
 			zip_queue.push(std::string("/lib/easysplash/") + std::to_string(display.get_width()) + ".zip");
-			zip_queue.push("/lib/easysplash/default.zip");
+			zip_queue.push("/lib/easysplash/bootanimation.zip");
 
 			while (!zip_queue.empty())
 			{
