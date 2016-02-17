@@ -12,7 +12,7 @@ if(WITH_SYSVINIT)
 
   configure_file(${CMAKE_SOURCE_DIR}/src/init/easysplash-start.init.cmake ${PROJECT_BINARY_DIR}/src/init/easysplash-start)
 
-  install(FILES ${PROJECT_BINARY_DIR}/src/init/easysplash-start DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/init.d )
+  install(PROGRAMS ${PROJECT_BINARY_DIR}/src/init/easysplash-start DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/init.d )
 endif()
 
 if(WITH_SYSTEMD)
