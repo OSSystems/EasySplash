@@ -5,7 +5,7 @@ DefaultDependencies=no
 
 [Service]
 Type=oneshot
-ExecStart=@CMAKE_INSTALL_SBINDIR@/easysplashctl 100 --wait-until-finished
+ExecStart=@CMAKE_INSTALL_PREFIX@@CMAKE_INSTALL_SBINDIR@/easysplashctl 100 --wait-until-finished
 TimeoutSec=30
 
 [Install]

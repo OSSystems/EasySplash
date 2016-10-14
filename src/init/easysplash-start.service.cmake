@@ -6,7 +6,7 @@ DefaultDependencies=no
 
 [Service]
 Type=notify
-ExecStart=@CMAKE_INSTALL_SBINDIR@/easysplash
+ExecStart=@CMAKE_INSTALL_PREFIX@@CMAKE_INSTALL_SBINDIR@/easysplash
 
 [Install]
 WantedBy=sysinit.target
