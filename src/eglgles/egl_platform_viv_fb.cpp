@@ -31,6 +31,7 @@ egl_platform::egl_platform()
 	, m_is_valid(false)
 {
 	m_internal = new internal;
+	auto internal_guard = make_scope_guard([&]() { delete m_internal; });
 
 	// Initialize display
 
@@ -133,8 +134,8 @@ egl_platform::egl_platform()
 		glViewport(actual_x, actual_y, actual_width, actual_height);
 	}
 
+	internal_guard.dismiss();
 	m_is_valid = true;
-
 }
 
 

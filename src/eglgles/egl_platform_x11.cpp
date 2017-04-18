@@ -14,6 +14,7 @@
 #include <X11/cursorfont.h>
 #include <X11/Xatom.h>
 
+#include "scope_guard.hpp"
 #include "egl_platform.hpp"
 #include "gl_misc.hpp"
 #include "log.hpp"
@@ -39,6 +40,12 @@ egl_platform::egl_platform()
 	, m_is_valid(false)
 {
 	m_internal = new internal;
+	auto internal_guard = make_scope_guard([&]()
+	{
+		if (m_native_display != NULL)
+			XCloseDisplay(reinterpret_cast < Display* > (m_native_display));
+		delete m_internal;
+	});
 
 	Display *x11_display;
 
@@ -219,6 +226,7 @@ egl_platform::egl_platform()
 		glViewport(0, 0, m_internal->m_display_width, m_internal->m_display_height);
 	}
 
+	internal_guard.dismiss();
 	m_is_valid = true;
 }
 
