@@ -582,8 +582,8 @@ struct egl_platform::internal
 
 				LOG_MSG(debug, "Found DRM mode #" << i
 					    << " width/height " << current_mode->hdisplay << "/" << current_mode->vdisplay
-					    << " hsync/vsync start " << current_mode->hsync_start << "/" << current_mode->hsync_end
-					    << " hsync/vsync end " << current_mode->hsync_end << "/" << current_mode->hsync_end
+					    << " hsync/vsync start " << current_mode->hsync_start << "/" << current_mode->vsync_start
+					    << " hsync/vsync end " << current_mode->hsync_end << "/" << current_mode->vsync_end
 					    << " htotal/vtotal " << current_mode->htotal << "/" << current_mode->vtotal
 					    << " hskew " << current_mode->hskew
 					    << " vscan " << current_mode->vscan
