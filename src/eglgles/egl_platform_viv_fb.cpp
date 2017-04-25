@@ -7,6 +7,7 @@
  */
 
 
+#include "scope_guard.hpp"
 #include "egl_platform.hpp"
 #include "gl_misc.hpp"
 #include "log.hpp"
