@@ -378,7 +378,7 @@ static drm_fb * drm_fb_get_from_bo(struct gbm_bo *bo)
 	if (ret != 0)
 	{
 		LOG_MSG(error, "Failed to add GBM BO as scanout framebuffer: " << std::strerror(errno) << " (" << errno << ")");
-		free(fb);
+		delete fb;
 		return nullptr;
 	}
 
