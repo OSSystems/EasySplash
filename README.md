@@ -192,6 +192,26 @@ displaying the animation. Example:
     easysplashctl 100 --wait-until-finished
 
 
+Mesa3D / GBM specific notes
+---------------------------
+
+When running EasySplash on a platform with Mesa3D and GBM as OpenGL implementation and
+framebuffer management system respectively, there are additional environment variables
+that can be used for explicitely specifying several parameters that are otherwise
+autodetected. These environment variables are:
+
+* `EASYSPLASH_GBM_DRM_DEVICE`: Path to a DRI device node. Example: `/dev/dri/card0`.
+  i.MX6 mainline kernel based platforms may need this variable to be set to
+  `/dev/dri/card1` in order to select the etnaviv DRI node.
+* `EASYSPLASH_GBM_DRM_CONNECTOR`: The DRM connector to use. A connector is for example
+  a HDMI input, LVDS pins, etc. If EasySplash runs, but nothing shows on screen, then
+  perhaps the wrong connector is being used. Run EasySplash with the `-v trace` flag
+  to get verbose log output, then search for lines about DRM connectors to see a list
+  of available connectors and to check which one is being selected. Then, if necessary,
+  specify the correct one as the value of this environment variable.
+
+
+
 Implementation notes
 --------------------
 

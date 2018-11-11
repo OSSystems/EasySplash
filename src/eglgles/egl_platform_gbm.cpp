@@ -55,9 +55,10 @@ static std::string get_name_for_drm_connector(drmModeConnector *connector)
 		case DRM_MODE_CONNECTOR_HDMIA: return "HDMI-A";
 		case DRM_MODE_CONNECTOR_HDMIB: return "HDMI-B";
 		case DRM_MODE_CONNECTOR_TV: return "TV";
-		case DRM_MODE_CONNECTOR_eDP: return "eDP";
+		case DRM_MODE_CONNECTOR_eDP: return "Embedded DisplayPort (eDP)";
 		case DRM_MODE_CONNECTOR_VIRTUAL: return "Virtual";
-		case DRM_MODE_CONNECTOR_DSI: return "DSI";
+		case DRM_MODE_CONNECTOR_DSI: return "Display Serial Interface (DSI)";
+		case DRM_MODE_CONNECTOR_DPI: return "DisplayPort (DPI)";
 		default:
 		{
 			std::stringstream sstr;
@@ -394,7 +395,8 @@ struct egl_platform::internal
 {
 	struct gbm_device *m_gbm_dev;
 	struct gbm_surface *m_gbm_surf;
-	struct gbm_bo *m_gbm_current_bo;
+	struct gbm_bo *m_gbm_current_bo, *m_gbm_previous_bo;
+	int m_waiting_for_flip;
 
 	int m_drm_fd;
 	drmModeRes *m_drm_mode_resources;
@@ -408,6 +410,8 @@ struct egl_platform::internal
 		: m_gbm_dev(nullptr)
 		, m_gbm_surf(nullptr)
 		, m_gbm_current_bo(nullptr)
+		, m_gbm_previous_bo(nullptr)
+		, m_waiting_for_flip(0)
 		, m_drm_fd(-1)
 		, m_drm_mode_resources(nullptr)
 		, m_drm_mode_connector(nullptr)
@@ -437,6 +441,26 @@ struct egl_platform::internal
 
 	bool find_drm_node()
 	{
+		// Check if a device node was explicitely defined by the environment variable.
+
+		char *drm_node_name = std::getenv("EASYSPLASH_GBM_DRM_DEVICE");
+		if (drm_node_name != nullptr)
+		{
+			LOG_MSG(debug, "Attempting to open device \"" << drm_node_name << "\" (specified by the EASYSPLASH_GBM_DRM_DEVICE environment variable)");
+			m_drm_fd = open(drm_node_name, O_RDWR | O_CLOEXEC);
+			if (m_drm_fd < 0)
+			{
+				LOG_MSG(error, "Could not open DRM device \"" << drm_node_name << "\": " << std::strerror(errno) << " (" << errno << ")");
+			}
+
+			return (m_drm_fd >= 0);
+		}
+		else
+			LOG_MSG(debug, "EASYSPLASH_GBM_DRM_DEVICE environment variable is not set - trying to autodetect device");
+
+		// Either the environment variable was not set, or the device node it
+		// specifies could not be opened. Try to autodetect a suitable device node.
+
 		struct udev *udev_ctx = nullptr;
 		udev_enumerate *udev_enum = nullptr;
 
@@ -536,34 +560,63 @@ struct egl_platform::internal
 		// Find a connected connector. The connector is where the pixel data is finally
 		// sent to, and typically connects to some form of display, like an HDMI TV,
 		// an LVDS panel etc.
+		// If the EASYSPLASH_GBM_DRM_CONNECTOR environment variable is set, select
+		// the first connector with the name the environment variable specifies.
 
 		{
-			drmModeConnector *connector = nullptr;
+			char *drm_connector_name = std::getenv("EASYSPLASH_GBM_DRM_CONNECTOR");
+			drmModeConnector *connected_connector = nullptr;
 
 			LOG_MSG(debug, "Checking " << m_drm_mode_resources->count_connectors << " DRM connector(s)");
+			if (drm_connector_name != nullptr)
+				LOG_MSG(debug, "EASYSPLASH_GBM_DRM_CONNECTOR environment variable set to \"" << drm_connector_name << "\"; will use this name to match connector(s) against");
 			for (int i = 0; i < m_drm_mode_resources->count_connectors; ++i)
 			{
-				connector = drmModeGetConnector(m_drm_fd, m_drm_mode_resources->connectors[i]);
-				LOG_MSG(debug, "Found DRM connector #" << i << " \"" << get_name_for_drm_connector(connector)
-				            << "\" with ID " << connector->connector_id);
+				drmModeConnector *candidate_connector = drmModeGetConnector(m_drm_fd, m_drm_mode_resources->connectors[i]);
+				std::string candidate_name = get_name_for_drm_connector(candidate_connector);
+				LOG_MSG(debug, "Found DRM connector #" << i << " \"" << candidate_name
+				            << "\" with ID " << candidate_connector->connector_id);
 
-				if (connector->connection == DRM_MODE_CONNECTED)
+				/* If we already picked a connector, and connected_connector is therefore
+				* non-NULL, then are just printing information about the other connectors
+				* for logging purposes by now, so don't actually do anything with this
+				* connector. Just loop instead. */
+				if (connected_connector != nullptr)
 				{
-					LOG_MSG(debug, "DRM connector #" << i << " is connected");
-					break;
+					drmModeFreeConnector (candidate_connector);
+					continue;
 				}
 
-				drmModeFreeConnector(connector);
-				connector = nullptr;
+				// If the EASYSPLASH_GBM_DRM_CONNECTOR environment variable is
+				// set, check if this connector's name matches that of the
+				// environment variable. If not, move on to the next connector.
+				if ((drm_connector_name != nullptr) && (candidate_name != drm_connector_name))
+				{
+					drmModeFreeConnector (candidate_connector);
+					continue;
+				}
+
+				if (candidate_connector->connection == DRM_MODE_CONNECTED)
+				{
+					if (drm_connector_name != nullptr)
+						LOG_MSG(debug, "Picking DRM connector #" << i << " because is connected and has a matching name \"" << candidate_name << "\"");
+						LOG_MSG(debug, "Picking DRM connector #" << i << " because is connected");
+					connected_connector = candidate_connector;
+				}
+				else
+				{
+					LOG_MSG(warning, "DRM connector #" << i << " has a matching name \"" << candidate_name << "\" but is not connected; not picking it");
+					drmModeFreeConnector(candidate_connector);
+				}
 			}
 
-			if (connector == nullptr)
+			if (connected_connector == nullptr)
 			{
 				LOG_MSG(error, "No connected DRM connector found");
 				return false;
 			}
 
-			m_drm_mode_connector = connector;
+			m_drm_mode_connector = connected_connector;
 		}
 
 
@@ -574,7 +627,10 @@ struct egl_platform::internal
 		{
 			int selected_mode_index = -1;
 			int selected_mode_area = -1;
+			bool preferred_mode_found = false;
+
 			LOG_MSG(debug, "Checking " << m_drm_mode_connector->count_modes << " DRM mode(s) from selected connector");
+
 			for (int i = 0; i < m_drm_mode_connector->count_modes; ++i)
 			{
 				drmModeModeInfo *current_mode = &(m_drm_mode_connector->modes[i]);
@@ -591,14 +647,14 @@ struct egl_platform::internal
 					    << " preferred " << !!(current_mode->type & DRM_MODE_TYPE_PREFERRED)
 				);
 
-				if ((current_mode->type & DRM_MODE_TYPE_PREFERRED) || (current_mode_area > selected_mode_area))
+				if (!preferred_mode_found && ((current_mode->type & DRM_MODE_TYPE_PREFERRED) || (current_mode_area > selected_mode_area)))
 				{
 					m_drm_mode_info = current_mode;
 					selected_mode_area = current_mode_area;
 					selected_mode_index = i;
 
 					if (current_mode->type & DRM_MODE_TYPE_PREFERRED)
-						break;
+						preferred_mode_found = true;
 				}
 			}
 
@@ -608,7 +664,7 @@ struct egl_platform::internal
 				return false;
 			}
 
-			LOG_MSG(debug, "Selected DRM mode #" << selected_mode_index);
+			LOG_MSG(debug, "Selected DRM mode #" << selected_mode_index << " (is preferred: " << preferred_mode_found << ")");
 		}
 
 
@@ -622,24 +678,24 @@ struct egl_platform::internal
 		// (We need the CRTC information for page flipping and DRM scanout framebuffer configuration.)
 
 		{
-			drmModeEncoder *encoder = nullptr;
+			drmModeEncoder *selected_encoder = nullptr;
 
 			LOG_MSG(debug, "Checking " << m_drm_mode_resources->count_encoders << " DRM encoder(s)");
 			for (int i = 0; i < m_drm_mode_resources->count_encoders; ++i)
 			{
-				encoder = drmModeGetEncoder(m_drm_fd, m_drm_mode_resources->encoders[i]);
-				LOG_MSG(debug, "Found DRM encoder #" << i << " \"" << get_name_for_drm_encoder(encoder) << "\"");
+				drmModeEncoder *candidate_encoder = drmModeGetEncoder(m_drm_fd, m_drm_mode_resources->encoders[i]);
+				LOG_MSG(debug, "Found DRM encoder #" << i << " \"" << get_name_for_drm_encoder(candidate_encoder) << "\"");
 
-				if (encoder->encoder_id == m_drm_mode_connector->encoder_id)
+				if ((selected_encoder == nullptr) && (candidate_encoder->encoder_id == m_drm_mode_connector->encoder_id))
 				{
+					selected_encoder = candidate_encoder;
 					LOG_MSG(debug, "DRM encoder #" << i << " corresponds to selected DRM connector -> selected");
-					break;
 				}
-				drmModeFreeEncoder(encoder);
-				encoder = nullptr;
+				else
+					drmModeFreeEncoder(candidate_encoder);
 			}
 
-			if (encoder == nullptr)
+			if (selected_encoder == nullptr)
 			{
 				LOG_MSG(debug, "No encoder found; searching for CRTC ID in the connector");
 				m_crtc_id = find_crtc_id_for_connector();
@@ -647,8 +703,8 @@ struct egl_platform::internal
 			else
 			{
 				LOG_MSG(debug, "Using CRTC ID from selected encoder");
-				m_crtc_id = encoder->crtc_id;
-				drmModeFreeEncoder(encoder);
+				m_crtc_id = selected_encoder->crtc_id;
+				drmModeFreeEncoder(selected_encoder);
 			}
 
 			if (m_crtc_id == INVALID_CRTC)
@@ -958,22 +1014,24 @@ egl_platform::egl_platform()
 		// encompass the whole GBM surface
 		glViewport(0, 0, m_internal->m_drm_mode_info->hdisplay, m_internal->m_drm_mode_info->vdisplay);
 
-		// First swapbuffers call as part of the page flipping setup. According
-		// to the gbm_surface_lock_front_buffer(), this must be called prior to
-		// calling that function.
+		// Create the first BO for setting up the CRTC. To do that, we call eglSwapBuffers(),
+		// which creates a BO. Also, this way, we start with a non-NULL m_gbm_current_bo ,
+		// which is important for the code in swap_buffers() see the comments there for more
+		// details about how EGL and GBM work together to implement page flipping).
 		if (!eglSwapBuffers(m_egl_display, m_egl_surface))
 		{
 			LOG_MSG(error, "eglSwapBuffers failed: " << egl_get_last_error_string());
 			return;
 		}
 
-		// Lock the bo's front buffer as the "current bo". Needed for page flipping
-		// in the egl_platform::swap_buffers() function below. The "current bo" is the
-		// one that will be used for scanout.
+		// Lock the BO that was created by eglSwapBuffer(). This makes it unavailable
+		// for rendering, but that's fine, since this is just the first BO that will be
+		// anyway swapped later.
 		m_internal->m_gbm_current_bo = gbm_surface_lock_front_buffer(m_internal->m_gbm_surf);
-		// Setup framebuffer information & set m_gbm_current_bo as a scanout framebuffer
 		drm_fb *framebuf = drm_fb_get_from_bo(m_internal->m_gbm_current_bo);
-		// Set m_gbm_current_bo as the data source for the CRTC
+
+		// Set m_gbm_current_bo as the data source for the CRTC. Later, during page
+		// flipping, CRTC setup will be copied over to other BOs.
 		if (drmModeSetCrtc(m_internal->m_drm_fd, m_internal->m_crtc_id, framebuf->fb_id, 0, 0, &(m_internal->m_drm_mode_connector->connector_id), 1, m_internal->m_drm_mode_info) != 0)
 		{
 			LOG_MSG(error, "Could not set DRM CRTC: " << std::strerror(errno) << " (" << errno << ")");
@@ -1021,26 +1079,40 @@ bool egl_platform::make_current()
 
 bool egl_platform::swap_buffers()
 {
-	// When using GBM and DRM directly like we do here, we have
-	// to worry about page flipping ourselves - eglSwapBuffers()
-	// won't do it for us. However, after the eglSwapBuffers()
-	// call, calling gbm_surface_lock_front_buffer() will return
-	// a new framebuffer bo to use as "front buffer". We add it
-	// too as a scanout buffer, then invoke drmModePageFlip().
+	// Rendering, page flipping etc. are connect this way:
+	//
+	// The frames are stored in buffer objects (BOs). Inside the eglSwapBuffers()
+	// call, GBM creates new BOs if necessary. BOs can be "locked" for rendering,
+	// meaning that EGL cannot use them as a render target. If all available
+	// BOs are locked, the GBM code inside eglSwapBuffers() creates a new,
+	// unlocked one. We make use of this to implement triple buffering.
+	//
+	// There are 3 BOs in play:
+	//
+	// * next_bo: The BO we just rendered into.
+	// * m_gbm_current_bo: The currently displayed BO.
+	// * m_gbm_previous_bo: The previously displayed BO.
+	//
+	// m_gbm_current_bo and m_gbm_previous_bo are involed in page flipping.
+	// next_bo is not.
+	//
+	// Once rendering is done, the next_bo is retrieved and locked. Then, we 
+	// wait until any ongoing page flipping finishes. Once it does, the
+	// m_gbm_current_bo is displayed on screen, and the m_gbm_previous_bo isn't
+	// anymore. At this point, it is safe to release the m_gbm_previous_bo,
+	// which unlocks it and makes it available again as a render target. Then we
+	// initiate the next page flipping; this time, we flip to next_bo. At that
+	// point, next_bo becomes m_gbm_current_bo, and m_gbm_current_bo becomes
+	// m_gbm_previous_bo.
 
+	// Call eglSwapBuffers to get a new unlocked framebuffer. If
+	// none is available, a new one is created automatically.
 	if (!eglSwapBuffers(m_egl_display, m_egl_surface))
 	{
 		LOG_MSG(error, "eglSwapBuffers failed: " << egl_get_last_error_string());
 		return false;
 	}
 
-	auto page_flip_handler = [](int /*fd*/, unsigned int /*frame*/, unsigned int /*sec*/, unsigned int /*usec*/, void *data) -> void
-	{
-		int *waiting_for_flip = reinterpret_cast < int* > (data);
-		*waiting_for_flip = 0;
-	};
-
-	// Get the new "front buffer" and set it up as a scanout buffer.
 	struct gbm_bo *next_bo = gbm_surface_lock_front_buffer(m_internal->m_gbm_surf);
 	drm_fb *framebuf = drm_fb_get_from_bo(next_bo);
 
@@ -1050,35 +1122,32 @@ bool egl_platform::swap_buffers()
 		gbm_surface_release_buffer(m_internal->m_gbm_surf, next_bo);
 	});
 
+	// Page flipping handler that sets m_waiting_for_flip to 0, signaling
+	// that the page flipping is done. The DRM FD will also have input
+	// data available by then. This is handled by drmHandleEvent().
+	auto page_flip_handler = [](int /*fd*/, unsigned int /*frame*/, unsigned int /*sec*/, unsigned int /*usec*/, void *data) -> void
+	{
+		int *waiting_for_flip = reinterpret_cast < int* > (data);
+		*waiting_for_flip = 0;
+	};
+
 	// Set up a poll() structure that we'll use to listen for DRM events
-	struct pollfd pfd;
+	struct pollfd pfd = {};
 	pfd.fd = m_internal->m_drm_fd;
 	pfd.events = POLLIN;
 	pfd.revents = 0;
 
-	drmEventContext evctx;
+	// Initially set all handler function pointers to NULL.
+	drmEventContext evctx = {};
 	evctx.version = DRM_EVENT_CONTEXT_VERSION;
 	evctx.page_flip_handler = page_flip_handler;
-	evctx.vblank_handler = nullptr;
 
-	// Initiate the page flipping. This will finish asynchronously,
-	// so we need the poll() based wait loop below.
-	int waiting_for_flip = 1;
-	int ret = drmModePageFlip(m_internal->m_drm_fd, m_internal->m_crtc_id, framebuf->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
-	if (ret != 0)
+	// Wait until any ongoing page flipping is done. After this is done,
+	// m_gbm_previous_bo is no longer involved in any page flipping, and can be
+	// safely released.
+	while (m_internal->m_waiting_for_flip)
 	{
-		// NOTE: According to libdrm sources, the page is _not_
-		// considered flipped if drmModePageFlip() reports an error,
-		// so we do not update the m_gbm_current_bo pointer here
-		LOG_MSG(error, "Could not flip DRM pages");
-		return false;
-	}
-
-	// NOTE: The page flip handler is called by drmHandleEvent(), so waiting_for_flip
-	// does not have to be protected by any mutex.
-	while (waiting_for_flip)
-	{
-		ret = poll(&pfd, 1, -1);
+		int ret = poll(&pfd, 1, -1);
 
 		if (ret < 0)
 		{
@@ -1087,20 +1156,36 @@ bool egl_platform::swap_buffers()
 			else
 				LOG_MSG(error, "poll() call failed: " << std::strerror(errno) << " (" << errno << ")");
 
-			return false;;
+			return false;
 		}
 
 		drmHandleEvent(m_internal->m_drm_fd, &evctx);
 	}
 
-	// Page flipping finished, meaning that the back buffer (where the GPU finished
-	// painting the new frame in prior to the eglSwapBuffers() call) is now the front
-	// buffers that is used for scanout by the CRTC. We need to update our pointers.
-	// Release the old "current bo" (that is not used for scanout anymore) and set the
-	// next bo as the current one (which is now the new current scanout framebuffer).
-	// (We call this process page flipping, because bo's keep being reused, so it is
-	// just like how hardware video buffer pages were flipped in older hardware.)
-	gbm_surface_release_buffer(m_internal->m_gbm_surf, m_internal->m_gbm_current_bo);
+	// Release m_gbm_previous_bo, since it is no longer shown on screen. This does
+	// not deallocate the buffer, it just returns it to the GBM buffer pool.
+	if (m_internal->m_gbm_previous_bo != nullptr)
+		gbm_surface_release_buffer(m_internal->m_gbm_surf, m_internal->m_gbm_previous_bo);
+
+	// Presently, m_gbm_current_bo is shown on screen. Schedule the next page
+	// flip, this time flip to next_bo. The flip happens asynchronously, so
+	// we can continue and render etc. in the meantime.
+	m_internal->m_waiting_for_flip = 1;
+	int ret = drmModePageFlip(m_internal->m_drm_fd, m_internal->m_crtc_id, framebuf->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &(m_internal->m_waiting_for_flip));
+	if (ret != 0)
+	{
+		// NOTE: According to libdrm sources, the page is _not_
+		// considered flipped if drmModePageFlip() reports an error,
+		// so we do not update the m_gbm_current_bo pointer here
+		LOG_MSG(error, "Could not flip DRM pages: " << std::strerror(-ret) << " (" << (-ret) << ")");
+		return false;
+	}
+
+	// At this point, we relabel the m_gbm_current_bo as the m_gbm_previous_bo.
+	// This may not actually be the case yet, but it will be soon - latest
+	// when the wait loop above finishes.
+	// Also, next_bo becomes m_gbm_current_bo.
+	m_internal->m_gbm_previous_bo = m_internal->m_gbm_current_bo;
 	m_internal->m_gbm_current_bo = next_bo;
 
 	// All done. We can dismiss the emergency cleanup procedure.
