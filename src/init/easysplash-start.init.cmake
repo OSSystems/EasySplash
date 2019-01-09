@@ -8,6 +8,9 @@
 ### END INIT INFO
 # Copyright (C) 2015 O.S. Systems Software Ltda.  All Rights Reserved
 
+# Read configuration variable file if it is present
+[ -r @CMAKE_INSTALL_SYSCONFDIR@/default/easysplash ] && . @CMAKE_INSTALL_SYSCONFDIR@/default/easysplash
+
 read CMDLINE < /proc/cmdline
 for x in $CMDLINE; do
 	case $x in
