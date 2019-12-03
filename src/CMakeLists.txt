@@ -42,6 +42,11 @@ elseif(DISPLAY_TYPE_GLES)
 
   add_definitions(-DLINUX) # necessary for the Vivante EGL headers
 
+  # necessary to make sure the X11 bits in EGL/eglplatform.h are never used
+  if (NOT EGL_PLATFORM_X11)
+    add_definitions(-DEGL_NO_X11)
+  endif()
+
   if (EGL_PLATFORM_X11)
     find_path(X11_INCLUDE_DIR X11/Xlib.h)
     find_library(X11_LIBRARY NAMES X11)
