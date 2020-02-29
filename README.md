@@ -23,7 +23,7 @@ Requirements
 * libpng version 1.2.50 or later
 * zlib version 1.2.8 or later
 * C++11 capable compiler on the build machine (recommended: gcc 4.8 or newer)
-* Python 2 or 3 on the build machine (for running the build system)
+* CMake (used for as build system)
 
 Note that so far, EasySplash has only been tested on the PC and on i.MX6 hardware.
 
