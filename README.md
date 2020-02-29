@@ -25,8 +25,6 @@ Requirements
 * C++11 capable compiler on the build machine (recommended: gcc 4.8 or newer)
 * CMake (used for as build system)
 
-Note that so far, EasySplash has only been tested on the PC and on i.MX6 hardware.
-
 
 Animation structure
 -------------------
