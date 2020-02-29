@@ -142,6 +142,7 @@ In the `DISPLAY_TYPE_GLES` case, an additional argument is necessary, `-D[egl-pl
 * `EGL_PLATFORM_X11`: Create an EGL surface in an X11 window (useful for debugging animations; also works on the PC)
 * `EGL_PLATFORM_VIV_FB`: Create an EGL surface directly on the framebuffer (Vivante GPU specific)
 * `EGL_PLATFORM_RPI_DISPMANX`: Create an EGL surface directly on the framebuffer (Raspberry Pi "userland" dispmanx specific)
+* `EGL_PLATFORM_GBM`: Create an EGL surface using MESA GBM (supports modern acceleration, such as Etnaviv)
 
 Example cmake call with an OpenGL ES display on the Framebuffer:
 
