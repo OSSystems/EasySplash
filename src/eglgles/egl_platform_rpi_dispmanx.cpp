@@ -2,8 +2,7 @@
  * EasySplash - tool for animated splash screens
  * Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
  *
- * Please refer to the LICENSE file included in the source code for
- * licensing terms.
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
 

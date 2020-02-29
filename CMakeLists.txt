@@ -1,15 +1,12 @@
-#
-# EasySplash - Linux Bootsplash
+# EasySplash - tool for animated splash screens
 # Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
 #
 # This file is part of EasySplash.
 #
-# Please refer to the LICENSE file included in the source code for
-# licensing terms.
-#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 
 cmake_minimum_required(VERSION 2.8.9)
-project(splash)
+project(easysplash)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

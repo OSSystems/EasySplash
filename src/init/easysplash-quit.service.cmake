@@ -1,3 +1,10 @@
+# EasySplash - tool for animated splash screens
+# Copyright (C) 2014, 2015  O.S. Systems Software LTDA.
+#
+# This file is part of EasySplash.
+#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
 [Unit]
 Description=Terminate EasySplash Boot Screen
 After=easysplash-start.service

@@ -1,4 +1,11 @@
 #!/bin/sh
+# EasySplash - tool for animated splash screens
+# Copyright (C) 2015  O.S. Systems Software LTDA.
+#
+# This file is part of EasySplash.
+#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
 ### BEGIN INIT INFO
 # Provides:             easysplash
 # Required-Start:
@@ -6,7 +13,6 @@
 # Default-Start:        S
 # Default-Stop:
 ### END INIT INFO
-# Copyright (C) 2015 O.S. Systems Software Ltda.  All Rights Reserved
 
 # Read configuration variable file if it is present
 [ -r @CMAKE_INSTALL_SYSCONFDIR@/default/easysplash ] && . @CMAKE_INSTALL_SYSCONFDIR@/default/easysplash
