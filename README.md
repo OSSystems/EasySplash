@@ -148,6 +148,11 @@ Example cmake call with an OpenGL ES display on the Framebuffer:
 
     cmake .. -DDISPLAY_TYPE_GLES=1 -DEGL_PLATFORM_VIV_FB=1
 
+Furthermore, support for System V and SystemD are available. Those are enabled using:
+
+* `ENABLE_SYSTEMD_SUPPORT`: Enable SystemD support
+* `ENABLE_SYSVINIT_SUPPORT`: Enable Sys V init support
+
 Now that the build is configured, simply run:
 
     make
