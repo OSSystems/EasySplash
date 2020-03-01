@@ -251,5 +251,5 @@ Contribution
 Any kinds of contributions are welcome as a pull request.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in gstreamer-rs by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
+for inclusion in EasySplash by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
