@@ -15,6 +15,15 @@ in realtime, without user interaction. In non-realtime mode, the animation progr
 sending progress updates over easysplashctl. The latter is useful if a progress value can be
 determined while something is loading, for example.
 
+For example, the below is the animation that has been in use for O.S. Systems' demo images:
+
+![O.S. Systems demo boot animation](https://github.com/OSSystems/easysplash/raw/master/doc/demo-animation.gif)
+
+There are two examples, which may be used as reference:
+
+* [O.S. Systems glowing logo](http://bit.ly/3cufarU)
+* [O.S. Systems demo boot animation](http://bit.ly/38cwJcD)
+
 
 Requirements
 ------------
