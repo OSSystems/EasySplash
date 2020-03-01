@@ -1,0 +1,13 @@
+# EasySplash - tool for animated splash screens
+# Copyright (C) 2020  O.S. Systems Software LTDA.
+#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+[package]
+name = "easysplash"
+version = "1.90.0"
+authors = ["Otavio Salvador <otavio@ossystems.com.br>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.26"
