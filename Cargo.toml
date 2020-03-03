@@ -11,3 +11,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.26"
+derive_more = { version = "0.99.5", default-features = false, features = ["display", "from", "error"] }
+log = { version = "0.4.8", default-features = false }
+serde = { version = "1.0.104", features = ["derive"] }
+toml = "0.5.6"
