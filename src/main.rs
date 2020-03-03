@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+mod animation;
+
 fn main() -> Result<(), anyhow::Error> {
     println!("Hello, world!");
 
