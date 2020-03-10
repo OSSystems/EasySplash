@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install Dependencies
+        run: sudo apt-get update; sudo apt-get install libgstreamer1.0-dev
       - name: Checkout sources
         uses: actions/checkout@v2
       - name: Install ${{ matrix.version }}
