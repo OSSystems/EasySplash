@@ -5,8 +5,9 @@
 
 mod animation;
 mod gstreamer;
+mod message;
 
-use crate::animation::Animation;
+use crate::{animation::Animation, message::Message};
 
 use argh::FromArgs;
 use log::{info, LevelFilter};
@@ -24,6 +25,7 @@ struct CmdLine {
 #[argh(subcommand)]
 enum Commands {
     Open(Open),
+    Client(Client),
 }
 
 /// open the render with the specific animation
@@ -34,7 +36,28 @@ struct Open {
     #[argh(positional)]
     path: PathBuf,
 
+    /// runtime directory (default to '/tmp/easysplash')
+    #[argh(option, default = "PathBuf::from(\"/tmp/easysplash\")")]
+    runtime_dir: PathBuf,
+
     /// log level to use (default to 'info')
+    #[argh(option, default = "LevelFilter::Info")]
+    log: LevelFilter,
+}
+
+/// control the render from the user space
+#[derive(FromArgs)]
+#[argh(subcommand, name = "client")]
+struct Client {
+    /// stop the render as soon as possible
+    #[argh(switch)]
+    stop: bool,
+
+    /// runtime directory (default to '/tmp/easysplash')
+    #[argh(option, default = "PathBuf::from(\"/tmp/easysplash\")")]
+    runtime_dir: PathBuf,
+
+    /// log level to use (default to info)
     #[argh(option, default = "LevelFilter::Info")]
     log: LevelFilter,
 }
@@ -49,7 +72,15 @@ async fn main() -> Result<(), anyhow::Error> {
 
             info!("starting EasySplash animation");
 
-            gstreamer::play_animation(Animation::from_path(&render.path)?).await?;
+            let socket = message::bind_socket(render.runtime_dir).await?;
+            gstreamer::play_animation(Animation::from_path(&render.path)?, socket).await?;
+        }
+        Commands::Client(client) => {
+            simple_logging::log_to_stderr(client.log);
+
+            if client.stop {
+                message::send(client.runtime_dir, Message::Interrupt).await?;
+            }
         }
     }
 
