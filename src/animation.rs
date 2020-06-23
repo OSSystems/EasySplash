@@ -120,6 +120,10 @@ impl Part {
     pub(crate) fn url(&self) -> String {
         format!("file://{}", self.file.to_string_lossy())
     }
+
+    pub(crate) fn is_interruptable(&self) -> bool {
+        self.mode == Mode::Interruptable
+    }
 }
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
