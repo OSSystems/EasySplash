@@ -23,6 +23,9 @@ pub(crate) enum Error {
 
     #[display(fmt = "The animation part '{}' is missing.", "_0.display()")]
     MissingPart(#[error(not(source))] PathBuf),
+
+    #[display(fmt = "The part with mode set as 'forever' must be the last one")]
+    WrongModeForeverPart,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -62,7 +65,20 @@ impl Animation {
             trace!("part {:?} was found", part.file);
         }
 
+        animation.validate_modes()?;
+
         Ok(animation)
+    }
+
+    fn validate_modes(&self) -> Result<(), Error> {
+        // Ensure if there is any part with `Mode::Forever` it is the last one,
+        // or it will never be played.
+        let mut iter = self.parts.iter();
+        if iter.any(|p| p.mode == Mode::Forever) && iter.next().is_some() {
+            return Err(Error::WrongModeForeverPart);
+        }
+
+        Ok(())
     }
 }
 
@@ -87,9 +103,16 @@ impl<'a> Iterator for AnimationIter<'a> {
     type Item = &'a Part;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // When we iterate the number of times which are required by the
-        // `current_part`, we move to the next.
-        let repeat = self.inner.parts.get(self.current_part)?.repeat;
+        let part = self.inner.parts.get(self.current_part)?;
+
+        // In case of `Mode::Forever` we just return the part.
+        if let Mode::Forever = part.mode {
+            return Some(part);
+        }
+
+        // Otherwise, when we iterate the number of times which are required by
+        // the `current_part`, we move to the next.
+        let repeat = part.repeat;
         if self.repeat > repeat {
             self.current_part += 1;
             self.repeat = 0;
@@ -122,7 +145,7 @@ impl Part {
     }
 
     pub(crate) fn is_interruptable(&self) -> bool {
-        self.mode == Mode::Interruptable
+        self.mode == Mode::Interruptable || self.mode == Mode::Forever
     }
 }
 
@@ -131,6 +154,7 @@ impl Part {
 pub(crate) enum Mode {
     Complete,
     Interruptable,
+    Forever,
 }
 
 impl Default for Mode {
@@ -158,6 +182,25 @@ mod test {
         };
 
         manifest_toml.try_into::<Animation>().expect("Failed to parse TOML")
+    }
+
+    #[test]
+    fn forever_mode_must_be_last_part() {
+        let animation = toml::toml! {
+            [[part]]
+            file = "part1.mp4"
+            mode = "forever"
+
+            [[part]]
+            file = "part2.mp4"
+        }
+        .try_into::<Animation>()
+        .expect("Failed to parse TOML");
+
+        assert!(
+            animation.validate_modes().is_err(),
+            "Animation with Mode::Forever must be the last part"
+        );
     }
 
     #[test]
@@ -197,6 +240,37 @@ mod test {
         assert_eq!(
             animation.next(),
             Some(&Part { file: "part3.mp4".into(), mode: Mode::Interruptable, repeat: 0 })
+        );
+    }
+
+    #[test]
+    fn part_with_mode_forever_keeps_returning_on_iter() {
+        let animation = toml::toml! {
+            [[part]]
+            file = "part1.mp4"
+
+            [[part]]
+            file = "part2.mp4"
+            mode = "forever"
+        }
+        .try_into::<Animation>()
+        .expect("Failed to parse TOML");
+
+        let mut animation: AnimationIter = animation.into_iter();
+
+        assert_eq!(
+            animation.next(),
+            Some(&Part { file: "part1.mp4".into(), mode: Mode::Complete, repeat: 0 })
+        );
+
+        assert_eq!(
+            animation.next(),
+            Some(&Part { file: "part2.mp4".into(), mode: Mode::Forever, repeat: 0 })
+        );
+
+        assert_eq!(
+            animation.next(),
+            Some(&Part { file: "part2.mp4".into(), mode: Mode::Forever, repeat: 0 })
         );
     }
 }

@@ -76,10 +76,11 @@ The animation view port is always rendered on the center of screen. The parts ar
 available:
 
 - `file`: specifies the file to use for the part (required).
-- `mode`: is either `complete` or `interruptable`. (optional)
+- `mode`: is `complete`, `interruptable` or `forever`. (optional)
     - `complete` means the part must be played completely, even if somebody requested EasySplash to
       stop (default).
     - `interruptable` means it can be stopped immediately.
+    - `forever` means it will be looping forever and can be interrupted.
 - `repeat`: defines how many times a part is replayed before moving to next. (optional)
 
 
