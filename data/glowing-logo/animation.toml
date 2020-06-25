@@ -6,5 +6,4 @@ file = "part2.mp4"
 
 [[part]]
 file = "part2.mp4"
-repeat = 100
-mode = "interruptable"
+mode = "forever"
