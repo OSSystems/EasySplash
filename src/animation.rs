@@ -175,7 +175,7 @@ mod test {
     }
 
     #[test]
-    fn iterator() {
+    fn iterator_takes_repeat_under_consideration_when_returning() {
         let animation = valid_toml();
         let mut animation: AnimationIter = animation.into_iter();
 
