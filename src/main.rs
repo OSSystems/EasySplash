@@ -62,26 +62,34 @@ struct Client {
     log: LevelFilter,
 }
 
+async fn open(args: Open) -> Result<(), anyhow::Error> {
+    simple_logging::log_to_stderr(args.log);
+
+    info!("starting EasySplash animation");
+
+    let socket = message::bind_socket(args.runtime_dir).await?;
+    gstreamer::play_animation(Animation::from_path(&args.path)?, socket).await?;
+
+    Ok(())
+}
+
+async fn client(args: Client) -> Result<(), anyhow::Error> {
+    simple_logging::log_to_stderr(args.log);
+
+    if args.stop {
+        message::send(args.runtime_dir, Message::Interrupt).await?;
+    }
+
+    Ok(())
+}
+
 #[async_std::main]
 async fn main() -> Result<(), anyhow::Error> {
     let cmdline: CmdLine = argh::from_env();
 
     match cmdline.inner {
-        Commands::Open(render) => {
-            simple_logging::log_to_stderr(render.log);
-
-            info!("starting EasySplash animation");
-
-            let socket = message::bind_socket(render.runtime_dir).await?;
-            gstreamer::play_animation(Animation::from_path(&render.path)?, socket).await?;
-        }
-        Commands::Client(client) => {
-            simple_logging::log_to_stderr(client.log);
-
-            if client.stop {
-                message::send(client.runtime_dir, Message::Interrupt).await?;
-            }
-        }
+        Commands::Open(args) => open(args).await?,
+        Commands::Client(args) => client(args).await?,
     }
 
     Ok(())
