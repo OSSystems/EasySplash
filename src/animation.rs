@@ -176,7 +176,7 @@ mod test {
 
     #[test]
     fn iterator() {
-        let animation = Animation { parts: valid_toml().parts };
+        let animation = valid_toml();
         let mut animation: AnimationIter = animation.into_iter();
 
         assert_eq!(
