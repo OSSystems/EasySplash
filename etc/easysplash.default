@@ -1,0 +1,8 @@
+# EasySplash - tool for animated splash screens
+# Copyright (C) 2020  O.S. Systems Software LTDA.
+#
+# This file is part of EasySplash.
+#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+EASYSPLASH_EXTRA_ARGS="--runtime-dir=/run/easysplash --log=info"
