@@ -65,6 +65,9 @@ struct Client {
 async fn open(args: Open) -> Result<(), anyhow::Error> {
     simple_logging::log_to_stderr(args.log);
 
+    #[cfg(feature = "systemd")]
+    systemd::daemon::notify(false, [(systemd::daemon::STATE_READY, "1")].iter())?;
+
     info!("starting EasySplash animation");
 
     match args.paths.iter().find(|p| p.exists()) {
