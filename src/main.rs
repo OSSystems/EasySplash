@@ -32,9 +32,9 @@ enum Commands {
 #[derive(FromArgs)]
 #[argh(subcommand, name = "open")]
 struct Open {
-    /// path to load the animation
+    /// paths to try to load the animation
     #[argh(positional)]
-    path: PathBuf,
+    paths: Vec<PathBuf>,
 
     /// runtime directory (default to '/tmp/easysplash')
     #[argh(option, default = "PathBuf::from(\"/tmp/easysplash\")")]
@@ -67,10 +67,15 @@ async fn open(args: Open) -> Result<(), anyhow::Error> {
 
     info!("starting EasySplash animation");
 
-    let socket = message::bind_socket(args.runtime_dir).await?;
-    gstreamer::play_animation(Animation::from_path(&args.path)?, socket).await?;
+    match args.paths.iter().find(|p| p.exists()) {
+        Some(path) => {
+            let socket = message::bind_socket(args.runtime_dir).await?;
+            gstreamer::play_animation(Animation::from_path(path)?, socket).await?;
 
-    Ok(())
+            Ok(())
+        }
+        None => Err(anyhow::format_err!("could not load any of provided animations")),
+    }
 }
 
 async fn client(args: Client) -> Result<(), anyhow::Error> {
