@@ -1,11 +1,12 @@
 EasySplash
 ==========
 
-This is a simple program for animated splash screens using GStreamer for rendering. It consists of
-an application which is capable of playing the animation and control its flow.
+EasySplash is an application that runs early the OS boot for showing graphical animation while the
+boot process itself happens in the background.
 
-It is possible to run EasySplash in all GStreamer supported backends. This is useful for debugging
-purposes and for trying out new animations on the desktop before uploading it to embedded devices.
+The app is built on Rust and binds to GStreamer, so it can run in any backend that supports both.
+It can also be used for debugging and testing new animations on the desktop before deploying it to
+embedded devices.
 
 For example, the below is the animation that has been in use for O.S. Systems' demo images:
 
