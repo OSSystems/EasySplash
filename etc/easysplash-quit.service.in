@@ -17,4 +17,4 @@ ExecStart=@SBINDIR@/easysplash client --stop ${EASYSPLASH_EXTRA_ARGS}
 TimeoutSec=30
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sysinit.target
