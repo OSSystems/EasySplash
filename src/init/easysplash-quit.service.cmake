@@ -16,4 +16,4 @@ ExecStart=@CMAKE_INSTALL_PREFIX@@CMAKE_INSTALL_SBINDIR@/easysplashctl 100 --wait
 TimeoutSec=30
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sysinit.target
