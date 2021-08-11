@@ -5,10 +5,9 @@
 
 use crate::{animation::Animation, message::Message};
 use async_std::{
-    io,
+    channel, io,
     os::unix::net::UnixListener,
     prelude::*,
-    sync,
     sync::{Arc, Mutex},
     task,
 };
@@ -21,20 +20,33 @@ pub(crate) enum Error {
     #[display(fmt = "No animation parts to play")]
     NoAnimation,
 
-    #[display(transparent)]
+    #[display(fmt = "Input/Output error: {}", _0)]
     Io(io::Error),
 
-    #[display(transparent)]
+    #[display(fmt = "GLib error: {}", _0)]
     Bool(gst::glib::error::BoolError),
 
-    #[display(transparent)]
+    #[display(fmt = "GLib error: {}", _0)]
     Glib(gst::glib::error::Error),
 
-    #[display(transparent)]
+    #[display(fmt = "GStreamer error while changing state: {}", _0)]
     StateChange(gst::StateChangeError),
 
-    #[display(transparent)]
-    ChannelReceiver(sync::RecvError),
+    #[display(fmt = "Error reading data in channel")]
+    ChannelReceive(channel::RecvError),
+
+    #[display(fmt = "Error sending data in channel")]
+    ChannelSend,
+}
+
+impl<T> From<channel::SendError<T>> for Error {
+    fn from(_e: channel::SendError<T>) -> Self {
+        // The original error from async_std::channel::Sender carries the undelivered
+        // message for recovery. However here we want to avoid raising the arity of
+        // the Error type, losing that ability but making the error type more
+        // permissive
+        Error::ChannelSend
+    }
 }
 
 enum PipelineStatus {
@@ -49,8 +61,8 @@ pub(crate) async fn play_animation(
     gst::init()?;
     debug!("Using {} as player", gst::version_string());
 
-    let (status_tx, status_rx) = sync::channel::<PipelineStatus>(1);
-    let (message_tx, message_rx) = sync::channel::<Message>(1);
+    let (status_tx, status_rx) = channel::bounded(1);
+    let (message_tx, message_rx) = channel::bounded(1);
     let playbin = gst::ElementFactory::make("playbin", None)?;
 
     // TODO: We are not yet handling the animation height and width properties.
@@ -70,7 +82,7 @@ pub(crate) async fn play_animation(
 }
 
 async fn feed_pipeline(
-    tx: sync::Sender<PipelineStatus>,
+    tx: channel::Sender<PipelineStatus>,
     playbin: gst::Element,
     animation: Animation,
 ) -> Result<(), Error> {
@@ -86,12 +98,12 @@ async fn feed_pipeline(
 
     // We need to wait for stream to start and then we can queue the next
     // part. We do that so we have a gapless playback.
-    let bus = playbin.get_bus().expect("failed to get pipeline bus");
+    let bus = playbin.bus().expect("failed to get pipeline bus");
     let mut messages = bus.stream();
     while let Some(msg) = messages.next().await {
         match msg.view() {
             MessageView::Error(err) => {
-                error!("{}", err.get_error());
+                error!("{}", err.error());
                 break;
             }
             MessageView::Eos(_) => {
@@ -108,7 +120,7 @@ async fn feed_pipeline(
                     PipelineStatus::Continuous
                 };
 
-                tx.send(status).await;
+                tx.send(status).await?;
 
                 // If we have more animation parts to play, queue the next.
                 if let Some(part) = parts.next() {
@@ -126,19 +138,19 @@ async fn feed_pipeline(
 }
 
 async fn handle_client_message(
-    tx: sync::Sender<Message>,
+    tx: channel::Sender<Message>,
     socket: UnixListener,
 ) -> Result<(), Error> {
     while let Some(stream) = socket.incoming().next().await {
-        tx.send(Message::from(stream?.bytes().next().await.expect("unexpected EOF")?)).await
+        tx.send(Message::from(stream?.bytes().next().await.expect("unexpected EOF")?)).await?
     }
 
     Ok(())
 }
 
 async fn handle_interrupt_message(
-    status_rx: sync::Receiver<PipelineStatus>,
-    message_rx: sync::Receiver<Message>,
+    status_rx: channel::Receiver<PipelineStatus>,
+    message_rx: channel::Receiver<Message>,
 ) -> Result<(), Error> {
     let interruptable = Arc::new(Mutex::new(false));
 
