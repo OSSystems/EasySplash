@@ -21,7 +21,7 @@ There are two animation [examples](https://github.com/OSSystems/EasySplash/tree/
 Requirements
 ------------
 
-* Rust 1.40.0 or newer
+* Rust 1.51.0 or newer
 * GStreamer (tested with 1.16)
 
 
