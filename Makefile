@@ -26,7 +26,7 @@ BINARY=target/$(TARGET)/$(BIN)
 
 .PHONY: all clean distclean install uninstall update
 
-all: $(BINARY) install install-animations
+all: $(BINARY)
 
 clean:
 	cargo clean
@@ -34,9 +34,12 @@ clean:
 distclean:
 	rm -rf .cargo target
 
-install: $(BINARY) install-animations
+install: install-binary install-service install-animations
+
+install-binary:
 	@install -Dm04755 "$(BINARY)" "$(DESTDIR)$(sbindir)/$(BIN)"
 
+install-service:
 	@install -Dm0644 "etc/easysplash.default" "$(DESTDIR)$(sysconfdir)/default/easysplash"
 
 	@if [ "$(SYSTEMD)" = "1" ]; then \
