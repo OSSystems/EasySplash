@@ -55,9 +55,9 @@ install-service:
 					"$(DESTDIR)$(base_libdir)/systemd/system/easysplash-quit.service" \
 					"$(DESTDIR)$(sysconfdir)/init.d/easysplash-start"; do \
 		if [ -e $$script ]; then \
-			sed -e "s/@SYSCONFDIR@/$(sysconfdir)/g" \
-				-e "s/@SBINDIR@/$(sbindir)/g" \
-				-i $$script; \
+			sed -e "s,@SYSCONFDIR@,$(sysconfdir),g" \
+			    -e "s,@SBINDIR@,$(sbindir),g" \
+			    -i $$script; \
 		fi; \
 	done
 
