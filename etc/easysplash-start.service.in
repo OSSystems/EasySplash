@@ -14,7 +14,7 @@ DefaultDependencies=no
 [Service]
 EnvironmentFile=-@SYSCONFDIR@/default/easysplash
 Type=notify
-ExecStart=@SBINDIR@/easysplash open /lib/easysplash/oem/ /lib/easysplash/animation  ${EASYSPLASH_EXTRA_ARGS}
+ExecStart=@SBINDIR@/easysplash open /lib/easysplash/oem/animation /lib/easysplash/animation  ${EASYSPLASH_EXTRA_ARGS}
 
 [Install]
 WantedBy=sysinit.target
