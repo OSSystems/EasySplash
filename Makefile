@@ -34,7 +34,7 @@ clean:
 distclean:
 	rm -rf .cargo target
 
-install: install-binary install-service install-animations
+install: install-binary install-service install-glowing-animation install-ossystems-animation
 
 install-binary:
 	@install -Dm04755 "$(BINARY)" "$(DESTDIR)$(sbindir)/$(BIN)"
@@ -61,9 +61,13 @@ install-service:
 		fi; \
 	done
 
-install-animations:
+install-glowing-animation:
 	@mkdir -p "$(DESTDIR)$(base_libdir)/easysplash/"
 	@cp -r data/glowing-logo "$(DESTDIR)$(base_libdir)/easysplash/"
+	@ln -s "$(base_libdir)/easysplash/$(DEFAULT_ANIMATION)" "$(DESTDIR)$(base_libdir)/easysplash/animation"
+
+install-ossystems-animation:
+	@mkdir -p "$(DESTDIR)$(base_libdir)/easysplash/"
 	@cp -r data/ossystems-demo "$(DESTDIR)$(base_libdir)/easysplash/"
 	@ln -s "$(base_libdir)/easysplash/$(DEFAULT_ANIMATION)" "$(DESTDIR)$(base_libdir)/easysplash/animation"
 
