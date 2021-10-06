@@ -13,7 +13,7 @@ DefaultDependencies=no
 [Service]
 EnvironmentFile=-@SYSCONFDIR@/default/easysplash
 Type=oneshot
-ExecStart=@SBINDIR@/easysplash client --stop $EASYSPLASH_EXTRA_ARGS
+ExecStart=@SBINDIR@/easysplash client --stop $EASYSPLASH_VIDEOSINK_ARGS EASYSPLASH_EXTRA_ARGS
 TimeoutSec=30
 
 [Install]
