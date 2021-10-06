@@ -27,4 +27,4 @@ for x in $CMDLINE; do
 	esac
 done
 
-@SBINDIR@/easysplash open  /lib/easysplash/oem/animation /lib/easysplash/animation ${EASYSPLASH_EXTRA_ARGS} &
+@SBINDIR@/easysplash open  /lib/easysplash/oem/animation /lib/easysplash/animation ${EASYSPLASH_VIDEOSINK_ARGS} ${EASYSPLASH_EXTRA_ARGS} &
