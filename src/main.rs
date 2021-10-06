@@ -40,6 +40,10 @@ struct Open {
     #[argh(option, default = "PathBuf::from(\"/tmp/easysplash\")")]
     runtime_dir: PathBuf,
 
+    /// custom video-sink to use when playing the animation
+    #[argh(option)]
+    video_sink: Option<String>,
+
     /// log level to use (default to 'info')
     #[argh(option, default = "LevelFilter::Info")]
     log: LevelFilter,
@@ -73,7 +77,7 @@ async fn open(args: Open) -> Result<(), anyhow::Error> {
     match args.paths.iter().find(|p| p.exists()) {
         Some(path) => {
             let socket = message::bind_socket(args.runtime_dir).await?;
-            gstreamer::play_animation(Animation::from_path(path)?, socket).await?;
+            gstreamer::play_animation(Animation::from_path(path)?, args.video_sink, socket).await?;
 
             Ok(())
         }

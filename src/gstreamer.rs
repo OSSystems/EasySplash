@@ -56,6 +56,7 @@ enum PipelineStatus {
 
 pub(crate) async fn play_animation(
     animation: Animation,
+    video_sink: Option<String>,
     socket: UnixListener,
 ) -> Result<(), Error> {
     gst::init()?;
@@ -63,9 +64,14 @@ pub(crate) async fn play_animation(
 
     let (status_tx, status_rx) = channel::bounded(1);
     let (message_tx, message_rx) = channel::bounded(1);
+
     let playbin = gst::ElementFactory::make("playbin", None)?;
 
-    // TODO: We are not yet handling the animation height and width properties.
+    // Use a custom 'video-sink' if required. By default, we use the 'playbin'
+    // one.
+    if let Some(video_sink) = video_sink {
+        playbin.set_property("video-sink", gst::parse_bin_from_description(&video_sink, true)?)?;
+    };
 
     // The pipeline is feed by the `feed_pipeline` and the control messages are
     // handled by the `handle_message` future.
