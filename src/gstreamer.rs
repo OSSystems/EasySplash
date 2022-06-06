@@ -70,7 +70,7 @@ pub(crate) async fn play_animation(
     // Use a custom 'video-sink' if required. By default, we use the 'playbin'
     // one.
     if let Some(video_sink) = video_sink {
-        playbin.set_property("video-sink", gst::parse_bin_from_description(&video_sink, true)?)?;
+        playbin.set_property("video-sink", gst::parse_bin_from_description(&video_sink, true)?);
     };
 
     // The pipeline is feed by the `feed_pipeline` and the control messages are
@@ -99,7 +99,7 @@ async fn feed_pipeline(
     let mut current_part = parts.next().ok_or(Error::NoAnimation)?;
 
     // Queue first animation part and ask GStreamer to start playing it.
-    playbin.set_property("uri", &current_part.url())?;
+    playbin.set_property("uri", &current_part.url());
     playbin.set_state(gst::State::Playing)?;
 
     // We need to wait for stream to start and then we can queue the next
@@ -133,7 +133,7 @@ async fn feed_pipeline(
                     current_part = part;
 
                     trace!("video has started, queuing next part");
-                    playbin.set_property("uri", &current_part.url())?;
+                    playbin.set_property("uri", &current_part.url());
                 }
             }
             _ => (),
