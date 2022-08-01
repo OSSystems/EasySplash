@@ -197,10 +197,7 @@ mod test {
         .try_into::<Animation>()
         .expect("Failed to parse TOML");
 
-        assert!(
-            animation.validate_modes().is_err(),
-            "Animation with Mode::Forever must be the last part"
-        );
+        animation.validate_modes().unwrap_err();
     }
 
     #[test]
