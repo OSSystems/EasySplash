@@ -1,7 +1,7 @@
 prefix ?= /usr/local
 sysconfdir ?= /etc
-sbindir = $(prefix)/sbin
-base_libdir = /lib
+sbindir ?= $(prefix)/sbin
+base_libdir ?= /lib
 
 SRC = Makefile Cargo.lock Cargo.toml $(shell find src -type f -wholename '*src/*.rs')
 
@@ -10,7 +10,12 @@ DEFAULT_ANIMATION ?= ossystems-demo
 
 SYSTEMD ?= 0
 ifeq ($(SYSTEMD),1)
+	PKG_CONFIG ?= pkg-config
+	systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd);
 	ARGS += --features systemd
+ifeq ($(strip $(systemdsystemunitdir)),)
+	$(error Could not find systemd.pc file. Aborting))
+endif
 endif
 
 INITD ?= 0
@@ -43,16 +48,16 @@ install-service:
 	@install -Dm0644 "etc/easysplash.default" "$(DESTDIR)$(sysconfdir)/default/easysplash"
 
 	@if [ "$(SYSTEMD)" = "1" ]; then \
-		install -Dm0644 "etc/easysplash-start.service.in" "$(DESTDIR)$(base_libdir)/systemd/system/easysplash-start.service"; \
-		install -Dm0644 "etc/easysplash-quit.service.in" "$(DESTDIR)$(base_libdir)/systemd/system/easysplash-quit.service"; \
+		install -Dm0644 "etc/easysplash-start.service.in" "$(DESTDIR)$(systemdsystemunitdir)/easysplash-start.service"; \
+		install -Dm0644 "etc/easysplash-quit.service.in" "$(DESTDIR)$(systemdsystemunitdir)/easysplash-quit.service"; \
 	fi
 
 	@if [ "$(INITD)" = "1" ]; then \
 		install -Dm0755 "etc/easysplash-start.init.in" "$(DESTDIR)$(sysconfdir)/init.d/easysplash-start"; \
 	fi
 
-	@for script in "$(DESTDIR)$(base_libdir)/systemd/system/easysplash-start.service" \
-					"$(DESTDIR)$(base_libdir)/systemd/system/easysplash-quit.service" \
+	@for script in "$(DESTDIR)$(systemdsystemunitdir)/easysplash-start.service" \
+					"$(DESTDIR)$(systemdsystemunitdir)/easysplash-quit.service" \
 					"$(DESTDIR)$(sysconfdir)/init.d/easysplash-start"; do \
 		if [ -e $$script ]; then \
 			sed -e "s,@SYSCONFDIR@,$(sysconfdir),g" \
@@ -64,12 +69,12 @@ install-service:
 install-glowing-animation:
 	@mkdir -p "$(DESTDIR)$(base_libdir)/easysplash/"
 	@cp -r data/glowing-logo "$(DESTDIR)$(base_libdir)/easysplash/"
-	@ln -s "$(base_libdir)/easysplash/$(DEFAULT_ANIMATION)" "$(DESTDIR)$(base_libdir)/easysplash/animation"
+	@ln -sf "$(base_libdir)/easysplash/$(DEFAULT_ANIMATION)" "$(DESTDIR)$(base_libdir)/easysplash/animation"
 
 install-ossystems-animation:
 	@mkdir -p "$(DESTDIR)$(base_libdir)/easysplash/"
 	@cp -r data/ossystems-demo "$(DESTDIR)$(base_libdir)/easysplash/"
-	@ln -s "$(base_libdir)/easysplash/$(DEFAULT_ANIMATION)" "$(DESTDIR)$(base_libdir)/easysplash/animation"
+	@ln -sf "$(base_libdir)/easysplash/$(DEFAULT_ANIMATION)" "$(DESTDIR)$(base_libdir)/easysplash/animation"
 
 $(BINARY):
 	cargo build $(ARGS)
