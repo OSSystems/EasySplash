@@ -42,6 +42,9 @@ This is the help screen of EasySplash when ran with the -h argument:
       open              open the render with the specific animation
       client            control the render from the user space
 
+Boot parameters:
+    easysplash.enable If you want to skip the EasySplash on system boot set up
+                      this to "0".
 
 Animation format
 ----------------
