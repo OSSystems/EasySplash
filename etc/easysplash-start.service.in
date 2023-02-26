@@ -10,11 +10,16 @@ Description=Start EasySplash Boot screen
 Wants=systemd-vconsole-setup.service
 After=systemd-vconsole-setup.service systemd-udev-trigger.service systemd-udevd.service
 DefaultDependencies=no
+ConditionKernelCommandLine=!easysplash.enable=0
+ConditionVirtualization=!container
+IgnoreOnIsolate=true
 
 [Service]
 EnvironmentFile=-@SYSCONFDIR@/default/easysplash
 Type=notify
 ExecStart=@SBINDIR@/easysplash open /lib/easysplash/oem/animation /lib/easysplash/animation $EASYSPLASH_EXTRA_ARGS
+RemainAfterExit=yes
+KillMode=mixed
 
 [Install]
 WantedBy=sysinit.target
