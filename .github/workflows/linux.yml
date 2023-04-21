@@ -17,11 +17,13 @@ jobs:
           - nightly
 
     name: Test ${{ matrix.version }} - x86_64-unknown-linux-gnu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Install Dependencies
-        run: sudo apt-get update; sudo apt-get install libgstreamer1.0-dev libsystemd-dev
+        run: |
+          sudo apt update
+          sudo apt-get install -f libgstreamer1.0-dev libsystemd-dev
       - name: Checkout sources
         uses: actions/checkout@v2
       - name: Install ${{ matrix.version }}

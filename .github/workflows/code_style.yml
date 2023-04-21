@@ -8,10 +8,12 @@ on:
 
 jobs:
   clippy_check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Install Dependencies
-        run: sudo apt-get update; sudo apt-get install libgstreamer1.0-dev libsystemd-dev
+        run: |
+          sudo apt update
+          sudo apt install -f libgstreamer1.0-dev libsystemd-dev
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
