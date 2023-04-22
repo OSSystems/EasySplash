@@ -10,15 +10,15 @@ authors = ["Otavio Salvador <otavio@ossystems.com.br>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "1.0.57"
-argh = "0.1.7"
-async-std = { version = "1.11.0", features = ["attributes", "unstable"] }
+anyhow = "1.0.70"
+argh = "0.1.10"
+async-std = { version = "1.12.0", features = ["attributes", "unstable"] }
 derive_more = { version = "0.99.17", default-features = false, features = ["display", "from", "error"] }
-gst = { version = "0.18.8", package = "gstreamer", default-features = false }
+gst = { version = "0.20.5", package = "gstreamer", default-features = false }
 log = { version = "0.4.17", default-features = false }
-serde = { version = "1.0.137", features = ["derive"] }
+serde = { version = "1.0.160", features = ["derive"] }
 simple-logging = "2.0.2"
-toml = "0.5.9"
+toml = "0.7.3"
 
 # Optional dependencies
 systemd = { version = "0.10.0", optional = true }
