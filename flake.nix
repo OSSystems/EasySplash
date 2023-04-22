@@ -38,6 +38,10 @@
               pkg-config
               rust-toolchain
               systemd
+
+              cargo-release
+              cargo-outdated
+              cargo-edit
             ];
           }
         );
