@@ -15,7 +15,7 @@ argh = "0.1.10"
 async-std = { version = "1.12.0", features = ["attributes", "unstable"] }
 derive_more = { version = "0.99.17", default-features = false, features = ["display", "from", "error"] }
 gst = { version = "0.20.5", package = "gstreamer", default-features = false }
-log = { version = "0.4.17", default-features = false }
+log = { version = "0.4.18", default-features = false }
 serde = { version = "1.0.160", features = ["derive"] }
 simple-logging = "2.0.2"
 toml = "0.7.3"
