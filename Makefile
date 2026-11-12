@@ -11,10 +11,10 @@ DEFAULT_ANIMATION ?= ossystems-demo
 SYSTEMD ?= 0
 ifeq ($(SYSTEMD),1)
 	PKG_CONFIG ?= pkg-config
-	systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd);
+	systemdsystemunitdir ?= $(shell $(PKG_CONFIG) --variable=systemdsystemunitdir systemd)
 	ARGS += --features systemd
 ifeq ($(strip $(systemdsystemunitdir)),)
-	$(error Could not find systemd.pc file. Aborting))
+    $(error Could not find systemd.pc file. Aborting)
 endif
 endif
 
